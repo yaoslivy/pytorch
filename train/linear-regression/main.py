@@ -7,6 +7,9 @@ import torch.nn as nn
 from torch.nn.modules import loss
 from torch.nn.parameter import Parameter
 
+from tensorboardX import SummaryWriter
+from visdom import Visdom
+
 # y = wx + b 
 class LinearModel(nn.Module):
     def __init__(self):
@@ -27,6 +30,12 @@ if __name__ == "__main__":
     y_train = [w * x + b + random.randint(0, 2) for x in x_train]
     plt.plot(x_train, y_train, 'bo')
     plt.savefig("./test.svg")
+
+    # Create a SummaryWriter
+    writer = SummaryWriter()
+    # Create a Visdom
+    viz = Visdom(port=8097)
+    viz.line([0.], [0.], win='train_loss', opts=dict(title='train loss'))
     
     # Train model.
     model = LinearModel()
@@ -43,6 +52,10 @@ if __name__ == "__main__":
         print("epoch:", epoch+1, " loss:", loss)
         loss.backward()
         optimizer.step()
+        # tensorboardX
+        writer.add_scalar('Loss/train', loss, epoch)
+        # visdom
+        viz.line([loss.item()], [epoch], win='train_loss', update='append')
     
         
     for parameter in model.named_parameters():
